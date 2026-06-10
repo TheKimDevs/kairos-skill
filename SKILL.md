@@ -1,64 +1,105 @@
 ---
 name: kairos
-description: Use the KairOS Agent CLI and HTTP tool API — login and call calendar, task, lead, and budget tools. Use when scheduling events, managing tasks, working the job pipeline, or recording expenses/income.
+description: Use the KairOS Agent CLI and HTTP tool API — install CLI, login, and call calendar, task, lead, and budget tools. Use when scheduling events, managing tasks, working the job pipeline, or recording expenses/income.
 ---
 
 # KairOS (Agent CLI)
 
-You are an **AI Agent**. The **User** owns the data. The **KairOS** holds calendar, tasks, leads, and budget. You reach KairOS through the **Agent CLI** on the user’s machine.
+You are an **AI Agent**. The **User** owns the data. **KairOS** holds calendar, tasks, leads, and budget. You reach KairOS through the **Agent CLI** on the user’s machine (`kairos call …`).
 
 **Always authenticate** (`kairos whoami` → `Token valid: yes`) before calling tools.
 
-## Prerequisites
+## Setup (hosted / production)
 
-1. **Agent CLI** on the user’s machine — `npm install -g @kairos/agent-cli`
-2. **User login** — `kairos login --api-url <kairos-url>` (JWT in `~/.config/kairos/credentials.json`). The user authorizes in the browser; the dashboard shows the exact URL.
-3. **This skill** — `npx skills add <slug>` (slug from the user’s KairOS dashboard).
+Run in order. Copy **API URL** and **skill slug** from the user’s KairOS **Dashboard → Connect your AI agent** when available.
+
+### 1. Install Agent CLI
+
+```bash
+npm install -g kairos-cli
+kairos --help
+```
+
+### 2. Install this skill
+
+```bash
+npx skills add kairos/kairos
+```
+
+Use the slug from the dashboard if it differs (e.g. `npx skills add <org>/kairos`).
+
+### 3. Log in to KairOS
+
+User must use the **same account** in the browser and CLI.
+
+```bash
+kairos login --api-url https://kairos.querobines.com
+```
+
+For agent-driven setup (no auto-open browser):
+
+```bash
+kairos login --no-open --api-url https://kairos.querobines.com
+```
+
+User opens the printed URL → signs in if needed → clicks **Authorize**. Wait for `Saved credentials to …` (do not background the command).
+
+### 4. Verify
+
+```bash
+kairos whoami    # Token valid: yes
+kairos tools     # lists implemented tools
+```
+
+Re-run `kairos login` when `Token valid: no` or tools return **401** (~1 hour JWT, no refresh in v1).
+
+Details: [auth.md](references/auth.md)
 
 ## Calling tools
 
-Prefer the CLI (handles auth headers):
+Prefer the CLI (handles auth headers). Use the user’s `api_url` from credentials, not localhost, unless they explicitly develop locally.
 
 ```bash
-# Calendar
-kairos call query_calendar '{"from":"2026-05-18","to":"2026-05-25"}'
-kairos call schedule_event '{"title":"Standup","start":"2026-05-19T09:00:00Z","end":"2026-05-19T09:30:00Z"}'
-
-# Tasks
-kairos call query_tasks '{"activeOnly":true}'
-kairos call create_task '{"title":"Follow up with Acme","priority":"high"}'
-kairos call update_task '{"id":"<task-uuid>","status":"in_progress"}'
-kairos call complete_task '{"id":"<task-uuid>"}'
-kairos call schedule_task '{"taskId":"<task-uuid>","start":"2026-05-19T14:00:00Z","end":"2026-05-19T15:00:00Z"}'
-
-# Leads
-kairos call query_leads '{"activeOnly":true,"sortBy":"ev","sortDir":"desc"}'
-kairos call create_lead '{"company":"Acme","role":"Staff Engineer"}'
-kairos call advance_lead_stage '{"leadId":"<lead-uuid>","toStage":"phone_screen"}'
-kairos call get_lead_ev '{"leadId":"<lead-uuid>"}'
-
-# Budget
-kairos call record_expense '{"amount":42.5,"currency":"USD","date":"2026-05-22","note":"Coffee"}'
-kairos call record_income '{"amount":5000,"currency":"USD","date":"2026-05-01"}'
-kairos call query_budget '{"month":"2026-05"}'
-
-# Cross-feature
+# Quick reads
 kairos call query_today '{}'
-kairos call query_expected_value_summary '{"activeOnly":true}'
+kairos call query_tasks '{"activeOnly":true}'
+kairos call query_calendar '{"from":"2026-06-01","to":"2026-06-30"}'
 
-kairos tools
-kairos whoami
+# Writes
+kairos call create_task '{"title":"Follow up with Acme","status":"todo","priority":"high"}'
+kairos call schedule_event '{"title":"Standup","start":"2026-06-10T09:00:00Z","end":"2026-06-10T09:30:00Z","calendarId":"personal"}'
+kairos call create_lead '{"company":"Acme","role":"Staff Engineer"}'
+kairos call record_expense '{"amount":42.5,"currency":"USD","date":"2026-06-03","note":"Coffee"}'
 ```
 
-Everyday use in your AI agent: ask in plain language (e.g. _What's on my calendar today?_) — see [auth.md](references/auth.md).
+Full payloads: [tools.md](references/tools.md)
+
+**User-facing language:** answer in plain language (_What’s on my calendar and tasks today?_) — do not dump raw JSON unless debugging.
+
+## Web app vs CLI
+
+| Path | How data changes |
+|------|------------------|
+| **You (CLI / tools)** | `POST /api/ai/tools/:name` → database |
+| **User (browser)** | Feature pages (calendar, tasks, leads, budget) via server actions |
+
+There is **no dashboard quick-add** for tools — agents use the CLI.
+
+After you create or update data via CLI:
+
+- **Settings → Activity** on KairOS shows each tool call (`ok`, `error`, `confirmation_required`).
+- An **already-open** browser tab may show stale lists for up to ~**60 seconds** (client cache). Tell the user to **navigate away and back** (e.g. Dashboard → Tasks) or **refresh** to see changes immediately.
+- **New navigation** to a route always loads fresh server data.
+
+If the user says “I don’t see it in the app,” confirm same login account, suggest navigation/refresh, then `kairos call query_*` to verify the write.
 
 ## Safety (v1)
 
-- **No delete tools** — do not delete events, tasks, or budget via API.
-- Only operate on the authenticated user's data.
-- Re-run `kairos login` when `whoami` shows `Token valid: no` or tools return **401** (~1 hour JWT, no refresh).
+- **Destructive tools** — `cancel_event` requires confirmation (`confirmed: true` on retry). Do not delete tasks or budget via API.
+- Only operate on the authenticated user’s data.
+- On `confirmation_required`, show the message/preview and retry only after the user approves.
 
 ## References
 
-- [auth.md](references/auth.md) — login, flags, troubleshooting
-- [tools.md](references/tools.md) — tool names, payloads, API shape
+- [auth.md](references/auth.md) — login, flags, credentials, troubleshooting
+- [tools.md](references/tools.md) — tool names, payloads, HTTP shape

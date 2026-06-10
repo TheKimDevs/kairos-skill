@@ -1,6 +1,8 @@
 # KairOS AI tools (v1)
 
-**KairOS** base URL: credentials `api_url` or `KAIROS_API_URL` (default `http://localhost:3000` for local KairOS only).
+**KairOS** base URL: credentials `api_url` or `KAIROS_API_URL` (production default `https://kairos.querobines.com`).
+
+Agents call tools via **CLI only** (`kairos call …`). The web app has no dashboard quick-add for tools.
 
 ## Before calling tools
 
@@ -9,6 +11,12 @@
 3. KairOS must be reachable at that base URL.
 
 Auth: `Authorization: Bearer <access_token>` from `~/.config/kairos/credentials.json`.
+
+## After calling tools
+
+- Writes persist immediately in the database.
+- User can verify in **Settings → Activity** (`ai_tool_call_log`).
+- Open browser tabs may lag ~60s; navigation or refresh shows new data. See [auth.md](./auth.md) § Web app after CLI changes.
 
 ## HTTP shape
 
@@ -56,6 +64,19 @@ Returns calendar events (ISO date strings for `start`/`end`).
 {
   "id": "<uuid>",
   "title": "Updated title"
+}
+```
+
+### `cancel_event`
+
+Deletes a user-created calendar event. First call without `confirmed: true` returns `confirmation_required`; retry with `confirmed: true` only after the user approves.
+
+`POST /api/ai/tools/cancel_event`
+
+```json
+{
+  "id": "<uuid>",
+  "confirmed": true
 }
 ```
 
