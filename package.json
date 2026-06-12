@@ -2,5 +2,5 @@
   "name": "@kairos/skill",
   "version": "0.0.1",
   "private": true,
-  "description": "KairOS agent skill for skills.sh — install via npx skills add <org>/kairos"
+  "description": "KairOS agent skill for skills.sh — pair with kairos-cli on npm (npm install -g kairos-cli)"
 }

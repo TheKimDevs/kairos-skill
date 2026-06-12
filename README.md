@@ -1,38 +1,31 @@
 # @kairos/skill
 
-KairOS skill package for AI agents — install via skills.sh, then use with `kairos-cli`.
+Source of truth for the **KairOS agent skill** (published via [skills.sh](https://skills.sh)).
 
-## Install the skill
+| File                                           | Audience                                     |
+| ---------------------------------------------- | -------------------------------------------- |
+| [`SKILL.md`](./SKILL.md)                       | AI agents — setup, calling tools, web vs CLI |
+| [`references/auth.md`](./references/auth.md)   | Login, flags, credentials, troubleshooting   |
+| [`references/tools.md`](./references/tools.md) | Tool names and JSON payloads                 |
 
-```bash
-npx skills add kairos/kairos
-```
-
-Use the slug from the user’s KairOS dashboard if configured (`NEXT_PUBLIC_KAIROS_SKILL_SLUG`).
-
-## User setup (production)
+**End users** install the skill **and** the npm CLI:
 
 ```bash
-npm install -g kairos-cli
-npx skills add kairos/kairos
-kairos login --api-url https://kairos.querobines.com
-kairos whoami
-kairos tools
+npx skills add TheKimDevs/kairos-skill    # this skill (skills.sh)
+npm install -g kairos-cli       # Agent CLI (npm)
 ```
 
-Copy API URL and skill command from **Dashboard → Connect your AI agent** when available.
+Full setup: [`SKILL.md`](./SKILL.md). Use the slug from the user's KairOS dashboard when it differs.
 
-## Main files
+> **Maintainers:** `SKILL.md` and `references/*` sync to the public skills.sh repo — customer-facing only. Use public install commands (`npm install -g kairos-cli`, `npx skills add …`); never link repo-internal paths (`docs/`, monorepo folders).
 
-- `SKILL.md` — agent instructions (setup, tools, web sync)
-- `references/auth.md` — login, credentials, troubleshooting, web UI sync
-- `references/tools.md` — tool names and payload examples
+## Monorepo workflow
 
-## Local development (monorepo)
+Edit files in this directory, then from the repo root:
 
 ```bash
-pnpm skill:link   # symlink .agents/skills/kairos → packages/kairos-skill
-pnpm skill:validate
+pnpm skill:validate   # check SKILL.md frontmatter
+pnpm skill:sync       # copy to sibling ../kairos-skill (preserves its .git)
 ```
 
-Publish updates to skills.sh so `npx skills add` users receive changes.
+Publish the sibling **`kairos-skill`** repo to skills.sh. CLI source in this monorepo: `packages/agent-cli/` (published to npm as `kairos-cli`).

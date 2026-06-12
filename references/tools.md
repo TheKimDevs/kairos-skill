@@ -1,8 +1,10 @@
 # KairOS AI tools (v1)
 
+**CLI:** install `kairos-cli` from npm (`npm install -g kairos-cli`), then `kairos call …`.
+
 **KairOS** base URL: credentials `api_url` or `KAIROS_API_URL` (production default `https://kairos.querobines.com`).
 
-Agents call tools via **CLI only** (`kairos call …`). The web app has no dashboard quick-add for tools.
+Agents call tools via the CLI only. The web app has no dashboard quick-add for tools.
 
 ## Before calling tools
 
@@ -16,7 +18,7 @@ Auth: `Authorization: Bearer <access_token>` from `~/.config/kairos/credentials.
 
 - Writes persist immediately in the database.
 - User can verify in **Settings → Activity** (`ai_tool_call_log`).
-- Open browser tabs may lag ~60s; navigation or refresh shows new data. See [auth.md](./auth.md) § Web app after CLI changes.
+- Open browser tabs may lag ~60s — see [SKILL.md § Web app vs CLI](../SKILL.md#web-app-vs-cli).
 
 ## HTTP shape
 

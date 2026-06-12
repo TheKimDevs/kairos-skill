@@ -5,30 +5,32 @@ description: Use the KairOS Agent CLI and HTTP tool API — install CLI, login, 
 
 # KairOS (Agent CLI)
 
-You are an **AI Agent**. The **User** owns the data. **KairOS** holds calendar, tasks, leads, and budget. You reach KairOS through the **Agent CLI** on the user’s machine (`kairos call …`).
+You are an **AI Agent**. The **User** owns the data. **KairOS** holds calendar, tasks, leads, and budget. You reach KairOS through the **Agent CLI** on the user's machine (`kairos call …`).
+
+**Install both** (agents need the npm CLI and this skill):
+
+```bash
+npm install -g kairos-cli       # npm — KairOS Agent CLI
+npx skills add TheKimDevs/kairos-skill    # skills.sh — this skill
+```
 
 **Always authenticate** (`kairos whoami` → `Token valid: yes`) before calling tools.
 
 ## Setup (hosted / production)
 
-Run in order. Copy **API URL** and **skill slug** from the user’s KairOS **Dashboard → Connect your AI agent** when available.
+Run in order. Copy **API URL** and **skill slug** from the user's KairOS **Dashboard → Connect your AI agent** when available.
 
-### 1. Install Agent CLI
+### 1. Install CLI and skill
 
 ```bash
-npm install -g kairos-cli
+npm install -g kairos-cli       # npm package — all kairos commands
+npx skills add TheKimDevs/kairos-skill    # this skill on skills.sh
 kairos --help
 ```
 
-### 2. Install this skill
+Use the slug from the dashboard if it differs (e.g. `npx skills add <owner>/kairos-skill`).
 
-```bash
-npx skills add kairos/kairos
-```
-
-Use the slug from the dashboard if it differs (e.g. `npx skills add <org>/kairos`).
-
-### 3. Log in to KairOS
+### 2. Log in to KairOS
 
 User must use the **same account** in the browser and CLI.
 
@@ -44,7 +46,7 @@ kairos login --no-open --api-url https://kairos.querobines.com
 
 User opens the printed URL → signs in if needed → clicks **Authorize**. Wait for `Saved credentials to …` (do not background the command).
 
-### 4. Verify
+### 3. Verify
 
 ```bash
 kairos whoami    # Token valid: yes
@@ -78,10 +80,10 @@ Full payloads: [tools.md](references/tools.md)
 
 ## Web app vs CLI
 
-| Path | How data changes |
-|------|------------------|
-| **You (CLI / tools)** | `POST /api/ai/tools/:name` → database |
-| **User (browser)** | Feature pages (calendar, tasks, leads, budget) via server actions |
+| Path                  | How data changes                                                  |
+| --------------------- | ----------------------------------------------------------------- |
+| **You (CLI / tools)** | `POST /api/ai/tools/:name` → database                             |
+| **User (browser)**    | Feature pages (calendar, tasks, leads, budget) via server actions |
 
 There is **no dashboard quick-add** for tools — agents use the CLI.
 
