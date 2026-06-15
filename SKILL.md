@@ -1,5 +1,5 @@
 ---
-name: kairos
+name: kairos-skill
 description: Use the KairOS Agent CLI and HTTP tool API — install CLI, login, and call calendar, task, lead, and budget tools. Use when scheduling events, managing tasks, working the job pipeline, or recording expenses/income.
 ---
 
