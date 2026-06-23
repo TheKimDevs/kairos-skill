@@ -7,41 +7,42 @@ description: Use the KairOS Agent CLI and HTTP tool API — install CLI, login, 
 
 You are an **AI Agent**. The **User** owns the data. **KairOS** holds calendar, tasks, leads, and budget. You reach KairOS through the **Agent CLI** on the user's machine (`kairos call …`).
 
-**Install both** (agents need the npm CLI and this skill):
+**Install both** (agents need the npm CLI and **kairos-skill**):
 
 ```bash
 npm install -g kairos-cli       # npm — KairOS Agent CLI
-npx skills add TheKimDevs/kairos-skill    # skills.sh — this skill
 ```
+
+Add **kairos-skill** with the `npx skills add …` command from the user's KairOS **Dashboard → Connect your AI agent**.
 
 **Always authenticate** (`kairos whoami` → `Token valid: yes`) before calling tools.
 
 ## Setup (hosted / production)
 
-Run in order. Copy **API URL** and **skill slug** from the user's KairOS **Dashboard → Connect your AI agent** when available.
+Run in order. Copy the skill install command from the user's KairOS **Dashboard → Connect your AI agent**.
 
 ### 1. Install CLI and skill
 
 ```bash
 npm install -g kairos-cli       # npm package — all kairos commands
-npx skills add TheKimDevs/kairos-skill    # this skill on skills.sh
+# kairos-skill — run the `npx skills add …` line copied from the user's dashboard
 kairos --help
 ```
 
-Use the slug from the dashboard if it differs (e.g. `npx skills add <owner>/kairos-skill`).
+The dashboard command is `npx skills add <github-owner>/kairos-skill` for that host (skills CLI requires a GitHub `owner/repo` source).
 
 ### 2. Log in to KairOS
 
 User must use the **same account** in the browser and CLI.
 
 ```bash
-kairos login --api-url https://kairos.querobines.com
+kairos login
 ```
 
 For agent-driven setup (no auto-open browser):
 
 ```bash
-kairos login --no-open --api-url https://kairos.querobines.com
+kairos login --no-open
 ```
 
 User opens the printed URL → signs in if needed → clicks **Authorize**. Wait for `Saved credentials to …` (do not background the command).
@@ -59,7 +60,7 @@ Details: [auth.md](references/auth.md)
 
 ## Calling tools
 
-Prefer the CLI (handles auth headers). Use the user’s `api_url` from credentials, not localhost, unless they explicitly develop locally.
+Prefer the CLI (handles auth headers). KairOS is at **https://kairos.querobines.com** (stored as `api_url` in credentials after login).
 
 ```bash
 # Quick reads

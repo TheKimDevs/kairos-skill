@@ -2,7 +2,7 @@
 
 **CLI:** install `kairos-cli` from npm (`npm install -g kairos-cli`), then `kairos call …`.
 
-**KairOS** base URL: credentials `api_url` or `KAIROS_API_URL` (production default `https://kairos.querobines.com`).
+**KairOS** base URL: **https://kairos.querobines.com** (stored as `api_url` in credentials after login).
 
 Agents call tools via the CLI only. The web app has no dashboard quick-add for tools.
 
