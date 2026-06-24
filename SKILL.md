@@ -45,7 +45,7 @@ For agent-driven setup (no auto-open browser):
 kairos login --no-open
 ```
 
-User opens the printed URL → signs in if needed → clicks **Authorize**. Wait for `Saved credentials to …` (do not background the command).
+User opens the printed URL (in any browser, on any machine) → signs in if needed → clicks **Authorize**. The CLI polls until then, so wait for `Saved credentials as <email> to …` (do not background the command).
 
 ### 3. Verify
 
