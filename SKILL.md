@@ -56,6 +56,8 @@ kairos tools     # lists implemented tools
 
 Re-run `kairos login` when `Token valid: no` or tools return **401** (~1 hour JWT, no refresh in v1).
 
+**Always-on / headless agents:** the device-flow token lasts ~1 hour. To avoid re-logging in, use a long-lived **API token** instead — the user mints one in **Settings → API Tokens**, then you set `KAIROS_API_TOKEN=kairos_sk_…` (or `kairos login --token kairos_sk_…`). See [auth.md § Headless agents](references/auth.md).
+
 Details: [auth.md](references/auth.md)
 
 ## Calling tools
@@ -73,7 +75,12 @@ kairos call create_task '{"title":"Follow up with Acme","status":"todo","priorit
 kairos call schedule_event '{"title":"Standup","start":"2026-06-10T09:00:00Z","end":"2026-06-10T09:30:00Z","calendarId":"personal"}'
 kairos call create_lead '{"company":"Acme","role":"Staff Engineer"}'
 kairos call record_expense '{"amount":42.5,"currency":"USD","date":"2026-06-03","note":"Coffee"}'
+
+# Recurring reminders/chores are TASKS — never cron jobs or repeating events
+kairos call create_task '{"title":"Clean water filter","recurrence":{"unit":"month","interval":3,"anchor":"completion"}}'
 ```
+
+**Recurring tasks:** for any "every N days/weeks/months/years" reminder or chore, set `recurrence` on `create_task` (`unit` = day|week|month|year, `interval` = N, `anchor` = `completion` default or `due`). Completing the task with `complete_task` spawns the next occurrence and returns `{task, next}`. Do **not** model personal recurring reminders as repeating calendar events or external cron jobs.
 
 Full payloads: [tools.md](references/tools.md)
 

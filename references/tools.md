@@ -54,9 +54,12 @@ Returns calendar events (ISO date strings for `start`/`end`).
   "end": "2026-05-19T15:00:00.000Z",
   "allDay": false,
   "calendarId": "personal",
-  "description": "optional"
+  "description": "optional",
+  "recurrence": { "unit": "week", "interval": 1, "byweekday": [0, 2, 4] }
 }
 ```
+
+Optional `recurrence` for **fixed calendar series** (meetings, classes) — `unit`: `day`|`week`|`month`|`year`, `interval` (default 1), optional `byweekday` (0=Mon…6=Sun), `until`, `count`. For chores that reset when done, use task `recurrence` (Tasks below).
 
 ### `update_event`
 
@@ -90,6 +93,20 @@ Task objects use ISO strings for `dueAt`, `createdAt`, and `updatedAt`.
 
 **Priority values:** `low`, `medium`, `high`
 
+**Recurring tasks** are the right home for personal recurring reminders and chores (e.g. "clean the water filter every 3 months") — do **not** use repeating calendar events or cron jobs for these. A task carries an optional `recurrence`:
+
+```json
+{
+  "unit": "month",
+  "interval": 3,
+  "anchor": "completion"
+}
+```
+
+- `unit`: `day` | `week` | `month` | `year`. `interval`: every N units (default 1).
+- `anchor`: `completion` (next due counts from when you finish it — default, best for chores) or `due` (next due counts from the previous due date — best for fixed schedules).
+- Optional `until` (ISO date) and `count` (total occurrences) bound the series.
+
 ### `query_tasks`
 
 `POST /api/ai/tools/query_tasks`
@@ -98,11 +115,13 @@ Task objects use ISO strings for `dueAt`, `createdAt`, and `updatedAt`.
 {
   "status": "todo",
   "activeOnly": true,
-  "leadId": "<uuid>"
+  "leadId": "<uuid>",
+  "dueAtFrom": "2026-05-01T00:00:00.000Z",
+  "dueAtTo": "2026-05-31T23:59:59.000Z"
 }
 ```
 
-All fields optional. `activeOnly: true` excludes dropped tasks only (not `done`).
+All fields optional. `activeOnly: true` excludes dropped tasks only (not `done`). `dueAtFrom` / `dueAtTo` filter by due-date range (tasks without a due date are excluded). Returned tasks include their `recurrence` when set.
 
 ### `create_task`
 
@@ -110,16 +129,17 @@ All fields optional. `activeOnly: true` excludes dropped tasks only (not `done`)
 
 ```json
 {
-  "title": "Follow up with Acme",
+  "title": "Clean water filter",
   "description": "optional",
   "status": "todo",
   "priority": "high",
   "dueAt": "2026-05-22T17:00:00.000Z",
-  "leadId": "<uuid>"
+  "leadId": "<uuid>",
+  "recurrence": { "unit": "month", "interval": 3, "anchor": "completion" }
 }
 ```
 
-`status` defaults to `todo` when omitted.
+`status` defaults to `todo` when omitted. `recurrence` is optional (omit for a one-off task).
 
 ### `update_task`
 
@@ -130,11 +150,12 @@ All fields optional. `activeOnly: true` excludes dropped tasks only (not `done`)
   "id": "<uuid>",
   "title": "Renamed task",
   "status": "in_progress",
-  "dueAt": "2026-05-22T17:00:00.000Z"
+  "dueAt": "2026-05-22T17:00:00.000Z",
+  "recurrence": { "unit": "week", "interval": 1, "anchor": "completion" }
 }
 ```
 
-At least one field besides `id` is required.
+At least one field besides `id` is required. Set `recurrence` to change it, `"recurrence": null` to clear it, or `"recurrence": { ..., "paused": true }` to stop spawning without losing the rule.
 
 ### `complete_task`
 
@@ -146,7 +167,7 @@ At least one field besides `id` is required.
 }
 ```
 
-Marks the task `done`.
+Marks the task `done`. For a recurring (non-paused) task it also creates the next occurrence and returns `{ "task": <completed>, "next": <new task or null> }` (`next` is `null` once `until`/`count` is exhausted).
 
 ### `schedule_task`
 
