@@ -74,14 +74,13 @@ Optional `recurrence` for **fixed calendar series** (meetings, classes) — `uni
 
 ### `cancel_event`
 
-Deletes a user-created calendar event. First call without `confirmed: true` returns `confirmation_required`; retry with `confirmed: true` only after the user approves.
+Soft-cancels a user-created calendar event (sets `canceled_at` — hidden from the calendar and reminders; row kept, not hard-deleted). Runs immediately; no confirmation. Uncancel is not an agent tool yet.
 
 `POST /api/ai/tools/cancel_event`
 
 ```json
 {
-  "id": "<uuid>",
-  "confirmed": true
+  "id": "<uuid>"
 }
 ```
 
@@ -135,11 +134,14 @@ All fields optional. `activeOnly: true` excludes dropped tasks only (not `done`)
   "priority": "high",
   "dueAt": "2026-05-22T17:00:00.000Z",
   "leadId": "<uuid>",
+  "projectId": "<uuid>",
+  "milestoneId": "<uuid>",
+  "order": 0,
   "recurrence": { "unit": "month", "interval": 3, "anchor": "completion" }
 }
 ```
 
-`status` defaults to `todo` when omitted. `recurrence` is optional (omit for a one-off task).
+`status` defaults to `todo` when omitted. All of `leadId`, `projectId`, `milestoneId`, `order`, and `recurrence` are optional (omit for a standalone one-off task). `order` sequences the task within its milestone/project (lower runs first).
 
 ### `update_task`
 
@@ -300,6 +302,135 @@ Stage defaults to `sourced`.
   "month": "2026-05"
 }
 ```
+
+### `delete_budget_entry`
+
+`POST /api/ai/tools/delete_budget_entry`
+
+```json
+{
+  "id": "<uuid>"
+}
+```
+
+Soft-deletes a budget entry (recoverable). Runs immediately; no confirmation.
+
+### `delete_budget_category`
+
+`POST /api/ai/tools/delete_budget_category`
+
+```json
+{
+  "id": "<uuid>"
+}
+```
+
+Soft-deletes a category (recoverable). Existing entries keep their reference; the name can be reused.
+
+## Projects
+
+KairOS **stores and ranks**; **you decompose**. For a goal, create a project, then add the **next 1–3** milestones/tasks just-in-time — never the whole tree, and KairOS never calls an LLM. Projects have status `active` | `paused` | `done`; milestones have status `open` | `done` and an `order`.
+
+### `query_projects`
+
+`POST /api/ai/tools/query_projects`
+
+```json
+{
+  "activeOnly": true
+}
+```
+
+Optional. Returns projects with their `milestones` array.
+
+### `create_project`
+
+`POST /api/ai/tools/create_project`
+
+```json
+{
+  "title": "Launch personal site",
+  "description": "optional"
+}
+```
+
+### `create_milestone`
+
+`POST /api/ai/tools/create_milestone`
+
+```json
+{
+  "projectId": "<uuid>",
+  "title": "Design",
+  "order": 0,
+  "targetDate": "2026-07-01"
+}
+```
+
+`order` (lower runs first) and `targetDate` are optional. Returns the updated project.
+
+### `query_next_action`
+
+`POST /api/ai/tools/query_next_action`
+
+```json
+{}
+```
+
+Returns the single best task to do now — `{ "task": <task>, "project": {...} | null, "milestone": {...} | null }` — or `null` when nothing is actionable. Deterministic ranking: candidates (todo/backlog/in_progress) → one next step per active project → priority → due urgency → recency. Trust this over your own prioritisation.
+
+### `query_actionable`
+
+`POST /api/ai/tools/query_actionable`
+
+```json
+{
+  "limit": 5
+}
+```
+
+Same ranking as `query_next_action` but returns the ranked list (default 5) — use for a focus/switch picker.
+
+### `log_time`
+
+`POST /api/ai/tools/log_time`
+
+```json
+{
+  "taskId": "<uuid>",
+  "minutes": 25
+}
+```
+
+Adds focus minutes to the task's running `timeLoggedMin` total. Call it **universally** — after any focus session or completed time block on a task. `minutes` must be a positive integer. Additive and low-stakes; runs immediately like all mutating tools.
+
+### `delete_project`
+
+`POST /api/ai/tools/delete_project`
+
+```json
+{
+  "id": "<uuid>"
+}
+```
+
+Soft-deletes a project (recoverable). Its milestones and task links are preserved; the project drops out of lists and the next-action ranking.
+
+### `delete_milestone`
+
+`POST /api/ai/tools/delete_milestone`
+
+```json
+{
+  "id": "<uuid>"
+}
+```
+
+Soft-deletes a milestone (recoverable); returns the updated project. Tasks linked to it keep their data.
+
+## Deleting things
+
+Everything is **soft-deletable** (recoverable) and runs immediately (no confirmation). Use the right verb per entity: tasks → `update_task` `{status:"dropped"}`; leads → `advance_lead_stage` `{toStage:"dropped"}`; calendar → `cancel_event`; projects → `delete_project`; milestones → `delete_milestone`; budget entries/categories → `delete_budget_entry` / `delete_budget_category`.
 
 ## Cross-feature
 

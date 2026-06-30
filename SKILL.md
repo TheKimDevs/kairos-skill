@@ -67,6 +67,7 @@ Prefer the CLI (handles auth headers). KairOS is at **https://kairos.querobines.
 ```bash
 # Quick reads
 kairos call query_today '{}'
+kairos call query_next_action '{}'          # the single best task to do now
 kairos call query_tasks '{"activeOnly":true}'
 kairos call query_calendar '{"from":"2026-06-01","to":"2026-06-30"}'
 
@@ -86,6 +87,20 @@ Full payloads: [tools.md](references/tools.md)
 
 **User-facing language:** answer in plain language (_What’s on my calendar and tasks today?_) — do not dump raw JSON unless debugging.
 
+## Projects & "what should I work on now?"
+
+KairOS groups tasks into **projects** and **milestones** and ranks them deterministically. **You decompose; KairOS stores + ranks** — KairOS never runs an LLM.
+
+- For a goal, `create_project`, then add the **next 1–3** `create_milestone` / `create_task` (with `projectId`/`milestoneId`) **just-in-time** as the project progresses — never pre-generate the whole plan.
+- Ask `query_next_action` for the single best task to do right now (with its project/milestone), or `query_actionable` for a ranked shortlist. Do **not** invent your own prioritisation — KairOS's ranking is the source of truth.
+
+```bash
+kairos call create_project '{"title":"Launch personal site"}'
+kairos call create_milestone '{"projectId":"<uuid>","title":"Design","order":0}'
+kairos call create_task '{"title":"Pick a template","projectId":"<uuid>","milestoneId":"<uuid>"}'
+kairos call query_next_action '{}'
+```
+
 ## Web app vs CLI
 
 | Path                  | How data changes                                                  |
@@ -97,7 +112,7 @@ There is **no dashboard quick-add** for tools — agents use the CLI.
 
 After you create or update data via CLI:
 
-- **Settings → Activity** on KairOS shows each tool call (`ok`, `error`, `confirmation_required`).
+- **Settings → Activity** on KairOS shows each tool call (`ok` or `error`).
 - An **already-open** browser tab may show stale lists for up to ~**60 seconds** (client cache). Tell the user to **navigate away and back** (e.g. Dashboard → Tasks) or **refresh** to see changes immediately.
 - **New navigation** to a route always loads fresh server data.
 
@@ -105,9 +120,9 @@ If the user says “I don’t see it in the app,” confirm same login account, 
 
 ## Safety (v1)
 
-- **Destructive tools** — `cancel_event` requires confirmation (`confirmed: true` on retry). Do not delete tasks or budget via API.
+- **No confirmation prompts** — tools run immediately. Safety comes from reversibility + the audit log (every call is recorded). There are **no hard-delete tools**: tasks/leads use a `dropped` status; `cancel_event` **soft-cancels** (`canceled_at`); `delete_project`, `delete_milestone`, `delete_budget_entry`, and `delete_budget_category` all soft-delete (`deleted_at`). Every entity is recoverable; undelete/uncancel is not yet an agent tool.
 - Only operate on the authenticated user’s data.
-- On `confirmation_required`, show the message/preview and retry only after the user approves.
+- Still tell the user in plain language what you changed (especially cancels and status changes), even though no prompt is required.
 
 ## References
 
