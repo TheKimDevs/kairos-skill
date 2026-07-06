@@ -68,7 +68,7 @@ Prefer the CLI (handles auth headers). KairOS is at **https://kairos.querobines.
 # Quick reads
 kairos call query_today '{}'
 kairos call query_next_action '{}'          # the single best task to do now
-kairos call query_tasks '{"activeOnly":true}'
+kairos call query_tasks '{"status":"todo"}'
 kairos call query_calendar '{"from":"2026-06-01","to":"2026-06-30"}'
 
 # Writes
@@ -120,7 +120,7 @@ If the user says “I don’t see it in the app,” confirm same login account, 
 
 ## Safety (v1)
 
-- **No confirmation prompts** — tools run immediately. Safety comes from reversibility + the audit log (every call is recorded). There are **no hard-delete tools**: tasks/leads use a `dropped` status; `cancel_event` **soft-cancels** (`canceled_at`); `delete_project`, `delete_milestone`, `delete_budget_entry`, and `delete_budget_category` all soft-delete (`deleted_at`). Every entity is recoverable; undelete/uncancel is not yet an agent tool.
+- **No confirmation prompts** — tools run immediately. Safety comes from reversibility + the audit log (every call is recorded). There are **no hard-delete tools**: `delete_task`, `delete_lead`, `delete_project`, `delete_milestone`, `delete_budget_entry`, and `delete_budget_category` all soft-delete (`deleted_at`; leads restore via `reopen_lead`); `cancel_event` **soft-cancels** (`canceled_at`). Every entity is recoverable; undelete/uncancel is not yet an agent tool.
 - Only operate on the authenticated user’s data.
 - Still tell the user in plain language what you changed (especially cancels and status changes), even though no prompt is required.
 
