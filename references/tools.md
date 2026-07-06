@@ -88,7 +88,7 @@ Soft-cancels a user-created calendar event (sets `canceled_at` — hidden from t
 
 Task objects use ISO strings for `dueAt`, `createdAt`, and `updatedAt`.
 
-**Status values:** `backlog`, `todo`, `in_progress`, `blocked`, `done`, `dropped`
+**Status values:** `backlog`, `todo`, `in_progress`, `blocked`, `done`
 
 **Priority values:** `low`, `medium`, `high`
 
@@ -113,14 +113,13 @@ Task objects use ISO strings for `dueAt`, `createdAt`, and `updatedAt`.
 ```json
 {
   "status": "todo",
-  "activeOnly": true,
   "leadId": "<uuid>",
   "dueAtFrom": "2026-05-01T00:00:00.000Z",
   "dueAtTo": "2026-05-31T23:59:59.000Z"
 }
 ```
 
-All fields optional. `activeOnly: true` excludes dropped tasks only (not `done`). `dueAtFrom` / `dueAtTo` filter by due-date range (tasks without a due date are excluded). Returned tasks include their `recurrence` when set.
+All fields optional. Soft-deleted tasks are always excluded. `dueAtFrom` / `dueAtTo` filter by due-date range (tasks without a due date are excluded). Returned tasks include their `recurrence` when set.
 
 ### `create_task`
 
@@ -189,7 +188,7 @@ Creates a calendar event and links it on the task (`scheduledEventId`).
 
 Lead objects use ISO strings for milestone `occurredAt` and timestamps.
 
-**Stage values:** `sourced`, `applied`, `phone_screen`, `interview`, `final_round`, `offer`, `negotiation`, `accepted`, `onboarded`, `rejected`, `dropped`
+**Stage values:** `sourced`, `applied`, `phone_screen`, `interview`, `final_round`, `offer`, `negotiation`, `accepted`, `onboarded`, `rejected`
 
 **Comp period:** `hourly`, `monthly`, `yearly`
 
@@ -250,9 +249,9 @@ Stage defaults to `sourced`.
 ```json
 {
   "leadId": "<uuid>",
-  "amount": 180000,
-  "currency": "USD",
-  "period": "yearly"
+  "compAmount": 180000,
+  "compCurrency": "USD",
+  "compPeriod": "yearly"
 }
 ```
 
@@ -430,7 +429,7 @@ Soft-deletes a milestone (recoverable); returns the updated project. Tasks linke
 
 ## Deleting things
 
-Everything is **soft-deletable** (recoverable) and runs immediately (no confirmation). Use the right verb per entity: tasks → `update_task` `{status:"dropped"}`; leads → `advance_lead_stage` `{toStage:"dropped"}`; calendar → `cancel_event`; projects → `delete_project`; milestones → `delete_milestone`; budget entries/categories → `delete_budget_entry` / `delete_budget_category`.
+Everything is **soft-deletable** (recoverable) and runs immediately (no confirmation). Use the right verb per entity: tasks → `delete_task`; leads → `delete_lead` (restore with `reopen_lead`); calendar → `cancel_event`; projects → `delete_project`; milestones → `delete_milestone`; budget entries/categories → `delete_budget_entry` / `delete_budget_category`.
 
 ## Cross-feature
 
