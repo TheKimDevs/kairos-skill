@@ -142,6 +142,8 @@ All fields optional. Soft-deleted tasks are always excluded. `dueAtFrom` / `dueA
 
 `status` defaults to `todo` when omitted. All of `leadId`, `projectId`, `milestoneId`, `order`, and `recurrence` are optional (omit for a standalone one-off task). `order` sequences the task within its milestone/project (lower runs first).
 
+**Set `dueAt` whenever the user gives any timeframe.** Resolve natural language to a concrete ISO datetime in the user's local timezone (end-of-period → last day of the period, e.g. "end of July" → `2026-07-31`) and echo the resolved date back. A task with no `dueAt` stays in every active list indefinitely; only leave it unset for genuine no-deadline items, and pair that with `status: "backlog"`. See [SKILL.md § Due dates & timeframes](../SKILL.md).
+
 ### `update_task`
 
 `POST /api/ai/tools/update_task`
