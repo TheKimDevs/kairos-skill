@@ -22,7 +22,7 @@ Prefer plain language (_What's on my calendar and tasks today?_) instead of expo
 
 ## Headless / always-on agents (API tokens)
 
-`kairos login` (device grant) issues a **1-hour** token with no refresh — fine for interactive use, but an always-on agent would have to re-login every hour. For that, use a **long-lived API token** instead:
+`kairos login` (device grant) issues a **24-hour** token with no refresh — fine for interactive use, but an always-on agent would have to re-login daily. For that, use a **long-lived API token** instead:
 
 1. The **user** creates one in KairOS **Settings → API Tokens** (recommend: scope it to the tools you need, and set an expiry rather than "never").
 2. The token (`kairos_sk_…`) is shown **once** — the user gives it to you to store securely.
@@ -70,7 +70,7 @@ kairos call <toolName> '<json>'
 }
 ```
 
-`email` is the account the token belongs to (shown by `kairos whoami`). For a **device-flow JWT**, there is **no refresh token** — on expiry or tool **401**, run `kairos login` again (~1h). For a **long-lived API token**, `access_token` is `kairos_sk_…` and `expires_at` is empty (no client-side expiry — see _Headless agents_ above).
+`email` is the account the token belongs to (shown by `kairos whoami`). For a **device-flow JWT**, there is **no refresh token** — on expiry or tool **401**, run `kairos login` again (~24h). For a **long-lived API token**, `access_token` is `kairos_sk_…` and `expires_at` is empty (no client-side expiry — see _Headless agents_ above).
 
 **Web UI after CLI writes:** [SKILL.md § Web app vs CLI](../SKILL.md#web-app-vs-cli).
 

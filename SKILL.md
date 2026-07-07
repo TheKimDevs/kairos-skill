@@ -54,9 +54,9 @@ kairos whoami    # Token valid: yes
 kairos tools     # lists implemented tools
 ```
 
-Re-run `kairos login` when `Token valid: no` or tools return **401** (~1 hour JWT, no refresh in v1).
+Re-run `kairos login` when `Token valid: no` or tools return **401** (~24 hour JWT, no refresh in v1).
 
-**Always-on / headless agents:** the device-flow token lasts ~1 hour. To avoid re-logging in, use a long-lived **API token** instead — the user mints one in **Settings → API Tokens**, then you set `KAIROS_API_TOKEN=kairos_sk_…` (or `kairos login --token kairos_sk_…`). See [auth.md § Headless agents](references/auth.md).
+**Always-on / headless agents:** the device-flow token lasts ~24 hours. To avoid re-logging in, use a long-lived **API token** instead — the user mints one in **Settings → API Tokens**, then you set `KAIROS_API_TOKEN=kairos_sk_…` (or `kairos login --token kairos_sk_…`). See [auth.md § Headless agents](references/auth.md).
 
 Details: [auth.md](references/auth.md)
 
@@ -87,12 +87,25 @@ Full payloads: [tools.md](references/tools.md)
 
 **User-facing language:** answer in plain language (_What’s on my calendar and tasks today?_) — do not dump raw JSON unless debugging.
 
+## Due dates & timeframes
+
+A task **without** `dueAt` floats in every active list indefinitely — it will keep showing up as "current" no matter how far off the user meant it. So resolve the user's intent into a concrete date whenever they give any timeframe signal.
+
+- **Infer by default, then echo it back.** Resolve natural language to a specific ISO `dueAt` and confirm the resolved date in plain language so the user can correct it:
+  - "by end of July" → `2026-07-31T…` · "next Friday" / "in two weeks" / "before the trip" → the specific date.
+  - Use the user's local timezone; end-of-period phrases resolve to the **last** day of that period.
+- **Only ask** for a date when there is genuinely **no** timeframe signal at all (and the task clearly implies a deadline). For true someday/no-deadline items, leave `dueAt` unset **and** use `status: "backlog"` so it doesn't read as active work.
+- Applies to **all** tasks you create — career, learning, and life/chores alike.
+
+**Avoid duplicates:** you don't remember tasks you created in earlier turns, so before `create_task`, run `query_tasks` and check for an existing open task with the same intent. If one exists, `update_task` it (change the due date, priority, description) instead of creating a second copy.
+
 ## Projects & "what should I work on now?"
 
 KairOS groups tasks into **projects** and **milestones** and ranks them deterministically. **You decompose; KairOS stores + ranks** — KairOS never runs an LLM.
 
 - For a goal, `create_project`, then add the **next 1–3** `create_milestone` / `create_task` (with `projectId`/`milestoneId`) **just-in-time** as the project progresses — never pre-generate the whole plan.
 - Ask `query_next_action` for the single best task to do right now (with its project/milestone), or `query_actionable` for a ranked shortlist. Do **not** invent your own prioritisation — KairOS's ranking is the source of truth.
+- **Don't present far-future tasks as "now".** The ranker surfaces every active task and only sorts by due urgency — a task due weeks away still appears, just lower. When the user asks what to do **today / this week**, scope to that window: use `query_today` for today, and filter `query_tasks` with `dueAtFrom`/`dueAtTo` (e.g. today → end of week) instead of listing every active task. A task due end of July is not something to do on July 8.
 
 ```bash
 kairos call create_project '{"title":"Launch personal site"}'
