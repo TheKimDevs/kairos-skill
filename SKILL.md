@@ -1,6 +1,6 @@
 ---
 name: kairos-skill
-description: Use the KairOS Agent CLI and HTTP tool API — install CLI, login, and call calendar, task, lead, and budget tools. Use when scheduling events, managing tasks, working the job pipeline, or recording expenses/income.
+description: Use the KairOS Agent CLI and HTTP tool API — install CLI, connect with an API token, and call calendar, task, lead, and budget tools. Use when scheduling events, managing tasks, working the job pipeline, or recording expenses/income.
 ---
 
 # KairOS (Agent CLI)
@@ -31,21 +31,17 @@ kairos --help
 
 The dashboard command is `npx skills add <github-owner>/kairos-skill` for that host (skills CLI requires a GitHub `owner/repo` source).
 
-### 2. Log in to KairOS
+### 2. Connect with an API token
 
-User must use the **same account** in the browser and CLI.
-
-```bash
-kairos login
-```
-
-For agent-driven setup (no auto-open browser):
+The **user** creates a long-lived API token at **KairOS → Settings → API Tokens** (scopable to specific tools, revocable, optional expiry) and shares it with you. Then either:
 
 ```bash
-kairos login --no-open
-```
+# Preferred for headless / always-on: env var — no login, no credentials file
+export KAIROS_API_TOKEN="kairos_sk_…"
 
-User opens the printed URL (in any browser, on any machine) → signs in if needed → clicks **Authorize**. The CLI polls until then, so wait for `Saved credentials as <email> to …` (do not background the command).
+# Or persist it to the credentials file
+kairos login --token kairos_sk_…
+```
 
 ### 3. Verify
 
@@ -54,9 +50,7 @@ kairos whoami    # Token valid: yes
 kairos tools     # lists implemented tools
 ```
 
-Re-run `kairos login` when `Token valid: no` or tools return **401** (~1 hour JWT, no refresh in v1).
-
-**Always-on / headless agents:** the device-flow token lasts ~1 hour. To avoid re-logging in, use a long-lived **API token** instead — the user mints one in **Settings → API Tokens**, then you set `KAIROS_API_TOKEN=kairos_sk_…` (or `kairos login --token kairos_sk_…`). See [auth.md § Headless agents](references/auth.md).
+Tokens don't expire client-side — the server enforces revocation/expiry on every call. A **401** means the token was revoked or expired (user mints a new one); a **403** means the token is scoped and the tool isn't in its allowlist.
 
 Details: [auth.md](references/auth.md)
 
@@ -87,12 +81,25 @@ Full payloads: [tools.md](references/tools.md)
 
 **User-facing language:** answer in plain language (_What’s on my calendar and tasks today?_) — do not dump raw JSON unless debugging.
 
+## Due dates & timeframes
+
+A task **without** `dueAt` floats in every active list indefinitely — it will keep showing up as "current" no matter how far off the user meant it. So resolve the user's intent into a concrete date whenever they give any timeframe signal.
+
+- **Infer by default, then echo it back.** Resolve natural language to a specific ISO `dueAt` and confirm the resolved date in plain language so the user can correct it:
+  - "by end of July" → `2026-07-31T…` · "next Friday" / "in two weeks" / "before the trip" → the specific date.
+  - Use the user's local timezone; end-of-period phrases resolve to the **last** day of that period.
+- **Only ask** for a date when there is genuinely **no** timeframe signal at all (and the task clearly implies a deadline). For true someday/no-deadline items, leave `dueAt` unset **and** use `status: "backlog"` so it doesn't read as active work.
+- Applies to **all** tasks you create — career, learning, and life/chores alike.
+
+**Avoid duplicates:** you don't remember tasks you created in earlier turns, so before `create_task`, run `query_tasks` and check for an existing open task with the same intent. If one exists, `update_task` it (change the due date, priority, description) instead of creating a second copy.
+
 ## Projects & "what should I work on now?"
 
 KairOS groups tasks into **projects** and **milestones** and ranks them deterministically. **You decompose; KairOS stores + ranks** — KairOS never runs an LLM.
 
 - For a goal, `create_project`, then add the **next 1–3** `create_milestone` / `create_task` (with `projectId`/`milestoneId`) **just-in-time** as the project progresses — never pre-generate the whole plan.
 - Ask `query_next_action` for the single best task to do right now (with its project/milestone), or `query_actionable` for a ranked shortlist. Do **not** invent your own prioritisation — KairOS's ranking is the source of truth.
+- **Don't present far-future tasks as "now".** The ranker surfaces every active task and only sorts by due urgency — a task due weeks away still appears, just lower. When the user asks what to do **today / this week**, scope to that window: use `query_today` for today, and filter `query_tasks` with `dueAtFrom`/`dueAtTo` (e.g. today → end of week) instead of listing every active task. A task due end of July is not something to do on July 8.
 
 ```bash
 kairos call create_project '{"title":"Launch personal site"}'
@@ -126,5 +133,5 @@ If the user says “I don’t see it in the app,” confirm same login account, 
 
 ## References
 
-- [auth.md](references/auth.md) — login, flags, credentials, troubleshooting
+- [auth.md](references/auth.md) — API tokens, flags, credentials, troubleshooting
 - [tools.md](references/tools.md) — tool names, payloads, HTTP shape
