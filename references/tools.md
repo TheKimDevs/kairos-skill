@@ -142,6 +142,10 @@ All fields optional. Soft-deleted tasks are always excluded. `dueAtFrom` / `dueA
 
 `status` defaults to `todo` when omitted. All of `leadId`, `projectId`, `milestoneId`, `order`, and `recurrence` are optional (omit for a standalone one-off task). `order` sequences the task within its milestone/project (lower runs first).
 
+**Server-enforced due dates:** `todo` and `in_progress` tasks **require** `dueAt` — the API rejects them without one. Use `status: "backlog"` (or `blocked`) for genuine someday items with no deadline.
+
+**Set `dueAt` whenever the user gives any timeframe.** Resolve natural language to a concrete ISO datetime in the user's local timezone (end-of-period → last day of the period, e.g. "end of July" → `2026-07-31`) and echo the resolved date back. A task with no `dueAt` stays in every active list indefinitely; only leave it unset for genuine no-deadline items, and pair that with `status: "backlog"`. See [SKILL.md § Due dates & timeframes](../SKILL.md).
+
 ### `update_task`
 
 `POST /api/ai/tools/update_task`
@@ -156,7 +160,7 @@ All fields optional. Soft-deleted tasks are always excluded. `dueAtFrom` / `dueA
 }
 ```
 
-At least one field besides `id` is required. Set `recurrence` to change it, `"recurrence": null` to clear it, or `"recurrence": { ..., "paused": true }` to stop spawning without losing the rule.
+At least one field besides `id` is required. Set `recurrence` to change it, `"recurrence": null` to clear it, or `"recurrence": { ..., "paused": true }` to stop spawning without losing the rule. **Server-enforced due dates:** the merged task must have `dueAt` when `status` is `todo` or `in_progress` — e.g. promoting `backlog` → `todo` without a due date is rejected.
 
 ### `complete_task`
 
@@ -214,11 +218,12 @@ All fields optional. `sortBy` may be `company`, `role`, `stage`, `probability`, 
 ```json
 {
   "company": "Acme",
-  "role": "Staff Engineer"
+  "role": "Staff Engineer",
+  "source": "referral"
 }
 ```
 
-Stage defaults to `sourced`.
+Stage defaults to `sourced`. `source` (`referral` | `inbound` | `job_board` | `outbound`, default `outbound`) records how the lead came in — referral leads start at 20% probability, inbound (the candidate messaged you directly) at 15%, versus the flat 5% for job-board/outbound leads at the `sourced` stage. Pass an explicit `probability` to override.
 
 ### `advance_lead_stage`
 
@@ -280,6 +285,10 @@ Stage defaults to `sourced`.
 }
 ```
 
+`currency` is optional — when omitted it falls back to the user's default currency (set in **Settings → Preferences**). Pass an explicit ISO 4217 code to override for a single entry.
+
+Calling with the same `amount`, `date`, `note`, and `categoryId` within 5 minutes of a prior call returns the existing entry instead of creating a duplicate — safe to retry after a timeout or unclear response without double-recording an expense.
+
 ### `record_income`
 
 `POST /api/ai/tools/record_income`
@@ -292,6 +301,8 @@ Stage defaults to `sourced`.
 }
 ```
 
+`currency` is optional here too (defaults to the user's saved default currency). Same 5-minute dedupe behavior as `record_expense`: an identical repeat call within 5 minutes returns the existing entry rather than inserting a duplicate.
+
 ### `query_budget`
 
 `POST /api/ai/tools/query_budget`
@@ -301,6 +312,62 @@ Stage defaults to `sourced`.
   "month": "2026-05"
 }
 ```
+
+### `query_budget_entries`
+
+`POST /api/ai/tools/query_budget_entries`
+
+```json
+{
+  "month": "2026-05",
+  "type": "expense"
+}
+```
+
+Both fields optional (omit to list every month/type). Returns entries for the current user, each with `id`, `type`, `amount`, `currency`, `date`, `categoryId`, `note`, `createdAt`:
+
+```json
+[
+  {
+    "id": "<uuid>",
+    "type": "expense",
+    "amount": 42.5,
+    "currency": "USD",
+    "date": "2026-05-22",
+    "categoryId": null,
+    "note": "Coffee",
+    "createdAt": "2026-05-22T09:15:00.000Z"
+  }
+]
+```
+
+Use this to find an entry's `id` — e.g. to spot and remove a duplicate with `delete_budget_entry`.
+
+### `query_budget_categories`
+
+`POST /api/ai/tools/query_budget_categories`
+
+```json
+{
+  "type": "expense"
+}
+```
+
+Lists categories (`id`, `name`, `type`, `color`) so you can find a `categoryId` for `record_expense`/`record_income`, or check for duplicates before creating a new one. `type` is optional (omit to list both income and expense categories). Seeds a few defaults (Salary, Freelance, Rent, Food, …) on first call if the user has none yet.
+
+### `create_budget_category`
+
+`POST /api/ai/tools/create_budget_category`
+
+```json
+{
+  "name": "Travel",
+  "type": "expense",
+  "color": "#f59e0b"
+}
+```
+
+`color` is optional. Call `query_budget_categories` first to avoid creating a duplicate.
 
 ### `delete_budget_entry`
 
