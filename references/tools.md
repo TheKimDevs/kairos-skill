@@ -53,13 +53,13 @@ Returns calendar events (ISO date strings for `start`/`end`).
   "start": "2026-05-19T14:00:00.000Z",
   "end": "2026-05-19T15:00:00.000Z",
   "allDay": false,
-  "calendarId": "personal",
+  "calendarId": "personal", // "personal" | "work" | "leads"
   "description": "optional",
   "recurrence": { "unit": "week", "interval": 1, "byweekday": [0, 2, 4] }
 }
 ```
 
-Optional `recurrence` for **fixed calendar series** (meetings, classes) — `unit`: `day`|`week`|`month`|`year`, `interval` (default 1), optional `byweekday` (0=Mon…6=Sun), `until`, `count`. For chores that reset when done, use task `recurrence` (Tasks below).
+Optional `reminders` is an array of `{ "minutesBefore": number, "channel": "push" | "email" }` (push is the delivered channel today). Optional `recurrence` for **fixed calendar series** (meetings, classes) — `unit`: `day`|`week`|`month`|`year`, `interval` (default 1), optional `byweekday` (0=Mon…6=Sun), `until`, `count`. For chores that reset when done, use task `recurrence` (Tasks below).
 
 ### `update_event`
 
@@ -209,7 +209,7 @@ Lead objects use ISO strings for milestone `occurredAt` and timestamps.
 }
 ```
 
-All fields optional. `sortBy` may be `company`, `role`, `stage`, `probability`, `ev`, or `updated_at`.
+All fields optional. `sortBy` may be `company`, `role`, `stage`, `probability`, `ev`, or `updated_at`; `sortDir` is `asc` or `desc` (default `desc`).
 
 ### `create_lead`
 
