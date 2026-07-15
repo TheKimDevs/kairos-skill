@@ -209,7 +209,7 @@ Lead objects use ISO strings for milestone `occurredAt` and timestamps.
 }
 ```
 
-All fields optional. `sortBy` may be `company`, `role`, `stage`, `probability`, `ev`, or `updated_at`; `sortDir` is `asc` or `desc` (default `desc`).
+All fields optional. `sortBy` may be `company`, `role`, `stage`, `probability`, `ev`, `position` (manual kanban order; default, ascending), or `updated_at`; `sortDir` is `asc` or `desc`. `update_lead` and `update_task` accept an optional numeric `position` to reorder manually (fractional, ascending).
 
 ### `create_lead`
 
