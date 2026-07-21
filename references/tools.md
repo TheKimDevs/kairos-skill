@@ -113,13 +113,14 @@ Task objects use ISO strings for `dueAt`, `createdAt`, and `updatedAt`.
 ```json
 {
   "status": "todo",
+  "activeOnly": true,
   "leadId": "<uuid>",
   "dueAtFrom": "2026-05-01T00:00:00.000Z",
   "dueAtTo": "2026-05-31T23:59:59.000Z"
 }
 ```
 
-All fields optional. Soft-deleted tasks are always excluded. `dueAtFrom` / `dueAtTo` filter by due-date range (tasks without a due date are excluded). Returned tasks include their `recurrence` when set.
+All fields optional. Soft-deleted tasks are always excluded. `activeOnly` excludes `done` (DB filter, same as projects). `dueAtFrom` / `dueAtTo` filter by due-date range (tasks without a due date are excluded). Returned tasks include their `recurrence` when set.
 
 ### `create_task`
 
