@@ -95,6 +95,12 @@ A task **without** `dueAt` floats in every active list indefinitely — it will 
 
 **Avoid duplicates:** you don't remember tasks you created in earlier turns, so before `create_task`, run `query_tasks` and check for an existing open task with the same intent. If one exists, `update_task` it (change the due date, priority, description) instead of creating a second copy.
 
+**Leads — employer vs referrer:** `company` is always the **employer/client you would work for**. Put the referrer in `referredBy` (and `source: "referral"`), never in `company`.
+
+**Unknown employer yet:** create with a short working title + `companyProvisional: true` (e.g. `"UK ops client"`, `referredBy: "Martin"`). Soft-dedupe skips provisional leads. When you learn the real name, `update_lead` with the employer and `companyProvisional: false`.
+
+**Avoid duplicate leads:** before `create_lead`, run `query_leads` and look for the same employer (spelling variants count). If one exists, `update_lead` / `advance_lead_stage` it instead of creating another. `create_lead` errors when a similar **non-provisional** company already exists unless you pass `force: true` for a deliberate second engagement.
+
 ## Projects & "what should I work on now?"
 
 KairOS groups tasks into **projects** and **milestones** and ranks them deterministically. **You decompose; KairOS stores + ranks** — KairOS never runs an LLM.

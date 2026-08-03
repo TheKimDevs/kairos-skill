@@ -218,13 +218,37 @@ All fields optional. `sortBy` may be `company`, `role`, `stage`, `probability`, 
 
 ```json
 {
-  "company": "Acme",
-  "role": "Staff Engineer",
-  "source": "referral"
+  "company": "UK ops client",
+  "role": "Ops engineer",
+  "source": "referral",
+  "referredBy": "Martin Stellar",
+  "companyProvisional": true
 }
 ```
 
+`company` must be the **employer/client** — not the referrer. Put who referred you in `referredBy` and set `source` to `referral`.
+
+When the real employer is unknown, use a short working title and `"companyProvisional": true`. Soft-dedupe **ignores** provisional leads, so you can later create/update with the real name without fighting the similar-company guard.
+
 Stage defaults to `sourced`. `source` (`referral` | `inbound` | `job_board` | `outbound`, default `outbound`) records how the lead came in — referral leads start at 20% probability, inbound (the candidate messaged you directly) at 15%, versus the flat 5% for job-board/outbound leads at the `sourced` stage. Pass an explicit `probability` to override.
+
+If an existing **non-provisional** lead has a similar company name, the call **errors** with those ids. Prefer `update_lead` / `advance_lead_stage` on an existing id; pass `"force": true` only when intentionally creating a second engagement at the same employer.
+
+### `update_lead`
+
+`POST /api/ai/tools/update_lead`
+
+```json
+{
+  "id": "<uuid>",
+  "company": "Alba Group",
+  "companyProvisional": false,
+  "source": "referral",
+  "referredBy": "Martin Stellar"
+}
+```
+
+Partial update. Prefer this over `create_lead` when the employer already exists (fix spelling, set `source`/`referredBy`, or resolve a provisional title). `company` must remain the employer/client.
 
 ### `advance_lead_stage`
 
