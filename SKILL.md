@@ -100,8 +100,8 @@ A task **without** `dueAt` floats in every active list indefinitely — it will 
 KairOS groups tasks into **projects** and **milestones** and ranks them deterministically. **You decompose; KairOS stores + ranks** — KairOS never runs an LLM.
 
 - For a goal, `create_project`, then add the **next 1–3** `create_milestone` / `create_task` (with `projectId`/`milestoneId`) **just-in-time** as the project progresses — never pre-generate the whole plan.
-- Ask `query_next_action` for the single best task to do right now (with its project/milestone), or `query_actionable` for a ranked shortlist. Do **not** invent your own prioritisation — KairOS's ranking is the source of truth.
-- **Don't present far-future tasks as "now".** The ranker surfaces every active task and only sorts by due urgency — a task due weeks away still appears, just lower. When the user asks what to do **today / this week**, scope to that window: use `query_today` for today, and filter `query_tasks` with `dueAtFrom`/`dueAtTo` (e.g. today → end of week) instead of listing every active task. A task due end of July is not something to do on July 8.
+- Ask `query_next_action` for the single best task in the current Sunday–Saturday work slice, or `query_actionable` for its ranked shortlist. Both include overdue dated work but exclude far-future and undated tasks by default. Pass `weekOf` (`YYYY-MM-DD`) to preview a future slice. Do **not** invent your own prioritisation — KairOS's ranking is the source of truth.
+- **Don't present far-future tasks as "now".** The ranker now scopes its default response to the current work slice; for explicit date windows use `query_tasks` with `dueAtFrom`/`dueAtTo`. A task due end of July is not something to do on July 8.
 
 ```bash
 kairos call create_project '{"title":"Launch personal site"}'

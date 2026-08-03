@@ -486,19 +486,33 @@ Optional. Returns projects with their `milestones` array.
 {}
 ```
 
-Returns the single best task to do now — `{ "task": <task>, "project": {...} | null, "milestone": {...} | null }` — or `null` when nothing is actionable. Deterministic ranking: candidates (todo/backlog/in_progress) → one next step per active project → priority → due urgency → recency. Trust this over your own prioritisation.
+Returns the single best task in the current Sunday–Saturday work slice (including
+overdue dated work), or `null` when nothing is actionable. Pass `weekOf` to plan
+a future slice; past overdue work does not leak into future weeks.
+
+```json
+{
+  "weekOf": "2026-08-09"
+}
+```
 
 ### `query_actionable`
 
 `POST /api/ai/tools/query_actionable`
 
+Returns the ranked current-week work slice by default. Tasks without due dates and
+far-future tasks are deliberately excluded; overdue dated tasks remain visible in
+the current week. `weekOf` selects a future Sunday–Saturday slice.
+
 ```json
 {
-  "limit": 5
+  "limit": 5,
+  "weekOf": "2026-08-09"
 }
 ```
 
-Same ranking as `query_next_action` but returns the ranked list (default 5) — use for a focus/switch picker.
+Same deterministic ranking as `query_next_action`; use it for a weekly briefing
+or focus/switch picker.
 
 ### `log_time`
 
