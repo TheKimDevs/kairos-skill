@@ -27,6 +27,12 @@ kairos login --token kairos_sk_…
 
 API tokens **don't expire client-side** (the server enforces revocation/expiry on every call), so `kairos whoami` reports `Token valid: yes` and tools keep working until the user revokes the token. If a tool returns **401**, the token was revoked or expired — the user must mint a new one. A **403** means the token is scoped and the tool isn't in its allowlist.
 
+### Public-beta fair use
+
+During the public beta, API access and token creation are included for authenticated users. The API applies a best-effort, fail-open fair-use safeguard targeting **120 tool calls per rolling minute**. It counts post-execution audit rows, so this target is not a strict upper bound. Each account may have up to **five active API tokens**. Revoked and expired tokens do not count; revoke an active token in KairOS Settings before creating another.
+
+These are transparent fair-use safeguards for the beta, not a paid quota or feature paywall.
+
 ## Agent setup flow
 
 1. `kairos whoami` — if `Token valid: no` or `Not logged in`, a token is needed.

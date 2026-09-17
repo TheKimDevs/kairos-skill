@@ -52,6 +52,12 @@ kairos tools     # lists implemented tools
 
 Tokens don't expire client-side — the server enforces revocation/expiry on every call. A **401** means the token was revoked or expired (user mints a new one); a **403** means the token is scoped and the tool isn't in its allowlist.
 
+### Public-beta fair use
+
+During the public beta, API access and token creation are included for authenticated users. The API applies a best-effort, fail-open fair-use safeguard targeting **120 tool calls per rolling minute**. It counts post-execution audit rows, so this target is not a strict upper bound. Each account may have up to **five active API tokens**. Revoked and expired tokens do not count; revoke an active token in KairOS Settings before creating another.
+
+These are transparent fair-use safeguards for the beta, not a paid quota or feature paywall.
+
 Details: [auth.md](references/auth.md)
 
 ## Calling tools
