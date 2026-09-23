@@ -115,12 +115,14 @@ Task objects use ISO strings for `dueAt`, `createdAt`, and `updatedAt`.
   "status": "todo",
   "activeOnly": true,
   "leadId": "<uuid>",
+  "projectId": "<uuid>",
+  "milestoneId": "<uuid>",
   "dueAtFrom": "2026-05-01T00:00:00.000Z",
   "dueAtTo": "2026-05-31T23:59:59.000Z"
 }
 ```
 
-All fields optional. Soft-deleted tasks are always excluded. `activeOnly` excludes `done` (DB filter, same as projects). `dueAtFrom` / `dueAtTo` filter by due-date range (tasks without a due date are excluded). Returned tasks include their `recurrence` when set.
+All fields optional. Soft-deleted tasks are always excluded. `activeOnly` excludes `done` (DB filter, same as projects). `projectId` / `milestoneId` return only tasks linked to that project or milestone. `dueAtFrom` / `dueAtTo` filter by due-date range (tasks without a due date are excluded). Returned tasks include their `recurrence` when set.
 
 ### `create_task`
 
@@ -501,6 +503,37 @@ Optional. Returns projects with their `milestones` array.
 ```
 
 `order` (lower runs first) and `targetDate` are optional. Returns the updated project.
+
+### `update_project`
+
+`POST /api/ai/tools/update_project`
+
+```json
+{
+  "id": "<uuid>",
+  "title": "Launch personal site v2",
+  "description": "optional",
+  "status": "paused"
+}
+```
+
+At least one field besides `id` is required. `status` is `active` | `paused` | `done`: `paused` drops the project out of `query_next_action` / `query_actionable` without closing it, `done` closes it, `active` resumes it. `"description": null` clears the description. Returns the updated project.
+
+### `update_milestone`
+
+`POST /api/ai/tools/update_milestone`
+
+```json
+{
+  "id": "<uuid>",
+  "title": "Design",
+  "status": "done",
+  "order": 1,
+  "targetDate": "2026-07-15"
+}
+```
+
+At least one field besides `id` is required. `status` is `open` | `done` — marking a milestone `done` moves the ranking on to the next open milestone. `order` resequences it (lower runs first). `"targetDate": null` clears the target date. Returns the updated project.
 
 ### `query_next_action`
 
