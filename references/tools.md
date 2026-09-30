@@ -622,7 +622,7 @@ Everything is **soft-deletable** (recoverable) and runs immediately (no confirma
 {}
 ```
 
-Optional `date` (`YYYY-MM-DD`) overrides today.
+Optional `date` (`YYYY-MM-DD`) overrides today. The day runs midnight to midnight in the time zone set in KairOS Settings.
 
 ### `query_expected_value_summary`
 
