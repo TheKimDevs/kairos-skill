@@ -75,11 +75,15 @@ kairos call query_calendar '{"from":"2026-06-01","to":"2026-06-30"}'
 kairos call create_task '{"title":"Follow up with Acme","status":"todo","priority":"high","dueAt":"2026-07-15T17:00:00.000Z"}'
 kairos call schedule_event '{"title":"Standup","start":"2026-06-10T09:00:00Z","end":"2026-06-10T09:30:00Z","calendarId":"personal"}'
 kairos call create_lead '{"company":"Acme","role":"Staff Engineer"}'
-kairos call record_expense '{"amount":42.5,"currency":"USD","date":"2026-06-03","note":"Coffee"}'
+# Budget: query categories first, then pass the UUID (you infer Food from "Coffee")
+kairos call query_budget_categories '{"type":"expense"}'
+kairos call record_expense '{"amount":42.5,"currency":"USD","date":"2026-06-03","note":"Coffee","categoryId":"<food-category-uuid>"}'
 
 # Recurring reminders/chores are TASKS — never cron jobs or repeating events
 kairos call create_task '{"title":"Clean water filter","dueAt":"2026-07-01T09:00:00.000Z","recurrence":{"unit":"month","interval":3,"anchor":"completion"}}'
 ```
+
+**Budget categories:** KairOS does **not** infer merchants or guess from `note` (e.g. Panda Express / “lunch” → Food). **You** do: call `query_budget_categories`, pick the category whose meaning fits the merchant/note, and pass that category’s UUID as `categoryId`. A category **name** or generic synonym (`lunch`, `grocery`) on `categoryId` also resolves to an existing category (case- and accent-insensitive). If the name is ambiguous or matches nothing, the tool errors with the candidate list — it never creates a category. Omitting `categoryId` leaves the entry uncategorized.
 
 **Recurring tasks:** for any "every N days/weeks/months/years" reminder or chore, set `recurrence` on `create_task` (`unit` = day|week|month|year, `interval` = N, `anchor` = `completion` default or `due`). Completing the task with `complete_task` spawns the next occurrence and returns `{task, next}`. Do **not** model personal recurring reminders as repeating calendar events or external cron jobs.
 

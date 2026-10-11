@@ -308,11 +308,16 @@ Partial update. Prefer this over `create_lead` when the employer already exists 
   "amount": 42.5,
   "currency": "USD",
   "date": "2026-05-22",
-  "note": "Coffee"
+  "note": "Coffee",
+  "categoryId": "<food-category-uuid>"
 }
 ```
 
 `currency` is optional — when omitted it falls back to the user's default currency (set in **Settings → Preferences**). Pass an explicit ISO 4217 code to override for a single entry.
+
+**Always categorize yourself:** call `query_budget_categories` (or reuse the list from this turn), then pass the matching category’s UUID as `categoryId`. Infer from merchant/note meaning — e.g. Panda Express / coffee shop → Food; Grab car → Transport; supermarket run → Grocery. KairOS does **not** classify brands.
+
+`categoryId` also accepts a category **name** or generic English synonym (`lunch`, `groceries`, `taxi`, …), matched case- and accent-insensitively against the user’s existing categories. A unique match is stored as that category’s id. Ambiguous or unknown names error with the candidate list — a category is never created automatically. When `categoryId` is omitted, the entry stays uncategorized; `note` is never used to guess a category.
 
 Calling with the same `amount`, `date`, `note`, and `categoryId` within 5 minutes of a prior call returns the existing entry instead of creating a duplicate — safe to retry after a timeout or unclear response without double-recording an expense.
 
@@ -324,11 +329,12 @@ Calling with the same `amount`, `date`, `note`, and `categoryId` within 5 minute
 {
   "amount": 5000,
   "currency": "USD",
-  "date": "2026-05-01"
+  "date": "2026-05-01",
+  "categoryId": "<salary-category-uuid>"
 }
 ```
 
-`currency` is optional here too (defaults to the user's saved default currency). Same 5-minute dedupe behavior as `record_expense`: an identical repeat call within 5 minutes returns the existing entry rather than inserting a duplicate.
+`currency` is optional here too (defaults to the user's saved default currency). Same rule as `record_expense`: prefer a UUID from `query_budget_categories`; a unique name/synonym also resolves to an existing category, and ambiguous or unknown names error with candidates (never auto-created). Same 5-minute dedupe behavior as `record_expense`: an identical repeat call within 5 minutes returns the existing entry rather than inserting a duplicate.
 
 ### `query_budget`
 
