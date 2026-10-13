@@ -59,6 +59,8 @@ Returns calendar events (ISO date strings for `start`/`end`).
 }
 ```
 
+**All-day events** (birthdays, holidays) need `"allDay": true`. Send `start` as noon on the first day and `end` as noon on the day after the last day, both in the person's time zone. A one-day event on 5 Nov in Manila (UTC+8) is `"start": "2026-11-05T04:00:00.000Z"`, `"end": "2026-11-06T04:00:00.000Z"`. Do not send midnight-to-23:59 UTC with `"allDay": false`: that is a timed event, and it shows as 8:00 AM to 7:59 AM the next day in Manila.
+
 Optional `reminders` is an array of `{ "minutesBefore": number, "channel": "push" | "email" }` (push is the delivered channel today). Optional `recurrence` for **fixed calendar series** (meetings, classes) — `unit`: `day`|`week`|`month`|`year`, `interval` (default 1), optional `byweekday` (0=Mon…6=Sun), `until`, `count`. For chores that reset when done, use task `recurrence` (Tasks below).
 
 ### `update_event`
